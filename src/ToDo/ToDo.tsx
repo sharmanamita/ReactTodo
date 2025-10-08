@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import "./toDo.css";
 import TodoForm from "./TodoForm";
 import TodoList from "./TodoList";
+import { getDatabase, ref, onValue } from "firebase/database";
+import cong from "../configuration";
 
 export type TodoData = {
   id: string;
@@ -33,6 +35,34 @@ const ToDo = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  
+  useEffect(() => {
+    // Initialize the Firebase database with the provided configuration
+    const database = getDatabase(cong);
+    
+    // Reference to the specific collection in the database
+    const collectionRef = ref(database, "todoreactapp-acd12");
+
+    // Function to fetch data from the database
+    const fetchData = () => {
+      // Listen for changes in the collection
+      onValue(collectionRef, (snapshot) => {
+        const dataItem = snapshot.val();
+
+        // Check if dataItem exists
+        if (dataItem) {
+          // Convert the object values into an array
+          const displayItem = Object.values(dataItem);
+          console.log("displayItem: ", displayItem);
+          setTasks(displayItem as Array<TodoData>);
+        }
+      });
+    };
+    fetchData();
+  }, []);
+
+  
 
   const handleButtonSubmit = (value: string) => {
     if (tasks?.findIndex((item) => item.value === value) !== -1) {
